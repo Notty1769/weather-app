@@ -3,36 +3,61 @@ import axios from "axios";
 import apiKeys from "./apiKeys";
 import ReactAnimatedWeather from "react-animated-weather";
 
-function Forcast(props) {
+function Forcast() {
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
-  const [weather, setWeather] = useState({});
+  const [weather, setWeather] = useState(null);
 
-  const search = (city) => {
-    axios
-      .get(
+  const search = async (city) => {
+    try {
+      const { data } = await axios.get(
         `${apiKeys.base}weather?q=${
           city != "[object Object]" ? city : query
         }&units=metric&APPID=${apiKeys.key}`
-      )
-      .then((response) => {
-        setWeather(response.data);
-        setQuery("");
-      })
-      .catch(function (error) {
-        console.log(error);
-        setWeather("");
-        setQuery("");
-        setError({ message: "Not Found", query: query });
+      );
+      let icon;
+      switch (data.weather[0].main) {
+        case "Haze":
+          icon = "CLEAR_DAY";
+          break;
+        case "Clouds":
+          icon = "CLOUDY";
+          break;
+        case "Rain":
+          icon = "RAIN";
+          break;
+        case "Snow":
+          icon = "SNOW";
+          break;
+        case "Dust":
+          icon = "WIND";
+          break;
+        case "Drizzle":
+          icon = "SLEET";
+          break;
+        case "Fog":
+          icon = "FOG";
+          break;
+        case "Smoke":
+          icon = "FOG";
+          break;
+        case "Tornado":
+          icon = "WIND";
+          break;
+        default:
+          icon = "CLEAR_DAY";
+      }
+      setWeather({
+        ...data,
+        icon,
       });
+    } catch (error) {
+      console.log(error);
+      setWeather(null);
+      setQuery("");
+      setError({ message: "Not Found", query: query });
+    }
   };
-
-  // function checkTime(i) {
-  //   if (i < 10) {
-  //     i = "0" + i;
-  //   } // add zero in front of numbers < 10
-  //   return i;
-  // }
 
   const defaults = {
     color: "white",
@@ -41,86 +66,85 @@ function Forcast(props) {
   };
 
   useEffect(() => {
-    search("Delhi");
+    search("delhi");
   }, []);
 
   return (
     <div className="forecast">
-      <div className="forecast-icon">
-        <ReactAnimatedWeather
-          icon={props.icon}
-          color={defaults.color}
-          size={defaults.size}
-          animate={defaults.animate}
+      <div className="search-box">
+        <input
+          type="text"
+          className="search-bar"
+          placeholder="Search any city"
+          onChange={(e) => setQuery(e.target.value)}
+          value={query}
         />
-      </div>
-
-      <div className="today-weather">
-        <h3>{props.weather}</h3>
-        <div className="search-box">
-          <input
-            type="text"
-            className="search-bar"
-            placeholder="Search any City"
-            onChange={(e) => setQuery(e.target.value)}
-            value={query}
+        <div className="img-box">
+          {" "}
+          <img
+            src="https://images.avishkaar.cc/workflow/newhp/search-white.png"
+            onClick={search}
           />
-          <div className="img-box">
-            {" "}
-            <img
-              src="https://images.avishkaar.cc/workflow/newhp/search-white.png"
-              onClick={search}
-              alt="Search Icon"
+        </div>
+      </div>
+      {weather ? (
+        <>
+          <div className="forecast-icon">
+            <ReactAnimatedWeather
+              icon={weather.icon}
+              color={defaults.color}
+              size={defaults.size}
+              animate={defaults.animate}
             />
           </div>
-        </div>
-        <ul>
-          {typeof weather.main != "undefined" ? (
-            <div>
-              {" "}
-              <li className="cityHead">
-                <p>
-                  {weather.name}, {weather.sys.country}
-                </p>
-                <img
-                  className="temp"
-                  src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}.png`}
-                  alt="Temperature icon"
-                />
-              </li>
-              <li>
-                Temperature{" "}
-                <span className="temp">
-                  {Math.round(weather.main.temp)}°c ({weather.weather[0].main})
-                </span>
-              </li>
-              <li>
-                Humidity{" "}
-                <span className="temp">
-                  {Math.round(weather.main.humidity)}%
-                </span>
-              </li>
-              <li>
-                Visibility{" "}
-                <span className="temp">
-                  {Math.round(weather.visibility)} mi
-                </span>
-              </li>
-              <li>
-                Wind Speed{" "}
-                <span className="temp">
-                  {Math.round(weather.wind.speed)} Km/h
-                </span>
-              </li>
-            </div>
-          ) : (
-            <li>
-              {" "}
-              {error.query} {error.message}
-            </li>
-          )}
-        </ul>
-      </div>
+          <div className="today-weather">
+            <h3>{weather.weather[0].main}</h3>
+            <ul>
+              <div>
+                {" "}
+                <li className="cityHead">
+                  <p>
+                    {weather.name}, {weather.sys.country}
+                  </p>
+                  <img
+                    className="temp"
+                    src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}.png`}
+                  />
+                </li>
+                <li>
+                  Temperature{" "}
+                  <span className="temp">
+                    {Math.round(weather.main.temp)}°c ({weather.weather[0].main}
+                    )
+                  </span>
+                </li>
+                <li>
+                  Humidity{" "}
+                  <span className="temp">
+                    {Math.round(weather.main.humidity)}%
+                  </span>
+                </li>
+                <li>
+                  Visibility{" "}
+                  <span className="temp">
+                    {Math.round(weather.visibility)} mi
+                  </span>
+                </li>
+                <li>
+                  Wind Speed{" "}
+                  <span className="temp">
+                    {Math.round(weather.wind.speed)} Km/h
+                  </span>
+                </li>
+              </div>
+            </ul>
+          </div>
+        </>
+      ) : (
+        <li>
+          {error.query} {error.message}
+        </li>
+      )}
     </div>
   );
 }

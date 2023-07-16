@@ -4,6 +4,7 @@ import Clock from "react-live-clock";
 import Forcast from "./weatherForcast";
 import loader from "./images/WeatherIcons.gif";
 import ReactAnimatedWeather from "react-animated-weather";
+import axios from "axios";
 
 const dateBuilder = (d) => {
   let months = [
@@ -96,51 +97,22 @@ class Weather extends React.Component {
   };
 
   getWeather = async (lat, lon) => {
-    const api_call = await fetch(
-      `${apiKeys.base}weather?lat=${lat}&lon=${lon}&units=metric&APPID=${apiKeys.key}`
-    );
-    const data = await api_call.json();
-    this.setState({
-      lat: lat,
-      lon: lon,
-      city: data.name,
-      temperatureC: Math.round(data.main.temp),
-      temperatureF: Math.round(data.main.temp * 1.8 + 32),
-      humidity: data.main.humidity,
-      main: data.weather[0].main,
-      country: data.sys.country,
-    });
-
-    switch (this.state.main) {
-      case "Haze":
-        this.setState({ icon: "CLEAR_DAY" });
-        break;
-      case "Clouds":
-        this.setState({ icon: "CLOUDY" });
-        break;
-      case "Rain":
-        this.setState({ icon: "RAIN" });
-        break;
-      case "Snow":
-        this.setState({ icon: "SNOW" });
-        break;
-      case "Dust":
-        this.setState({ icon: "WIND" });
-        break;
-      case "Drizzle":
-        this.setState({ icon: "SLEET" });
-        break;
-      case "Fog":
-        this.setState({ icon: "FOG" });
-        break;
-      case "Smoke":
-        this.setState({ icon: "FOG" });
-        break;
-      case "Tornado":
-        this.setState({ icon: "WIND" });
-        break;
-      default:
-        this.setState({ icon: "CLEAR_DAY" });
+    try {
+      const { data } = await axios.get(
+        `${apiKeys.base}weather?lat=${lat}&lon=${lon}&units=metric&APPID=${apiKeys.key}`
+      );
+      this.setState({
+        lat: lat,
+        lon: lon,
+        city: data.name,
+        temperatureC: Math.round(data.main.temp),
+        temperatureF: Math.round(data.main.temp * 1.8 + 32),
+        humidity: data.main.humidity,
+        main: data.weather[0].main,
+        country: data.sys.country,
+      });
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -178,7 +150,8 @@ class Weather extends React.Component {
               </div>
             </div>
           </div>
-          <Forcast icon={this.state.icon} weather={this.state.main} />
+
+          {/* icon={this.state.icon} weather={this.state.main} */}
         </React.Fragment>
       );
     } else {
